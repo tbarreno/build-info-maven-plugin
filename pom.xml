@@ -1,6 +1,4 @@
-<project
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -12,14 +10,32 @@
   <name>Build information plugin</name>
   <description>Shows information about built artifacts.</description>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://github.com/tbarreno/build-info-maven-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:tbarreno/build-info-maven-plugin.git</developerConnection>
+    <url>https://github.com/tbarreno/build-info-maven-plugin</url>
+    <tag>HEAD</tag>
+  </scm>
+  
   <prerequisites>
     <maven>${versions.maven}</maven>
   </prerequisites>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <versions.maven>3.1.1</versions.maven>
-    <versions.maven-plugin-plugin>3.5</versions.maven-plugin-plugin>
+    <versions.maven>3.3.9</versions.maven>
+    <versions.maven-plugin-plugin>3.6.0</versions.maven-plugin-plugin>
+    <versions.jackson>2.10.0.pr1</versions.jackson>
+    <versions.stax2-api>4.2</versions.stax2-api>
+    <versions.woodstox-core>6.0.0.pr2</versions.woodstox-core>
   </properties>
 
   <dependencies>
@@ -54,22 +70,22 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.9.9</version>
+      <version>${versions.jackson}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-xml</artifactId>
-      <version>2.9.9</version>
+      <version>${versions.jackson}</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.woodstox</groupId>
       <artifactId>stax2-api</artifactId>
-      <version>3.1.4</version>
+      <version>${versions.stax2-api}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
-      <version>5.0.3</version>
+      <version>${versions.woodstox-core}</version>
     </dependency>
   </dependencies>
 
@@ -78,7 +94,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.2</version>
+        <version>3.6.0</version>
         <configuration>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
         </configuration>

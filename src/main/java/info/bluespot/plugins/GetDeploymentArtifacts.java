@@ -23,8 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * This goal gathers all uploaded artifacts after a build and store them in a file (CSV, JSON or XML) for scripting use.
  */
-@Mojo( name = "deployed-artifacts", requiresProject = true, threadSafe = true, inheritByDefault = true )
-public class ShowDeploymentArtifacts
+@Mojo( name = "artifacts", requiresProject = true, threadSafe = true, inheritByDefault = true )
+public class GetDeploymentArtifacts
     extends AbstractMojo
 {
     /**
@@ -101,11 +101,6 @@ public class ShowDeploymentArtifacts
                 System.out.println( "There aren't any uploaded artifacts." );
                 return;
             }
-            else
-            {
-                System.out.println( "Writting uploaded artifacts to file '" + outputFile + "' (format '" + format
-                    + "')." );
-            }
 
             // Output content
             ArrayList<String> output = null;
@@ -125,6 +120,10 @@ public class ShowDeploymentArtifacts
                     throw new MojoExecutionException( e.getMessage() );
                 }
             }
+            else if ( Common.OUTPUT_YAML.equalsIgnoreCase( format ) )
+            {
+                output = toYAML();
+            }
             else if ( Common.OUTPUT_CSV.equalsIgnoreCase( format ) )
             {
                 output = toCSV();
@@ -139,7 +138,7 @@ public class ShowDeploymentArtifacts
             }
 
             // Write the output
-            System.out.println( "Writting distribution management information to file '" + outputFile + "' (format '"
+            System.out.println( "Writting artifact information to file '" + outputFile + "' (format '"
                 + format + "')." );
             Common.writeToFile( output, this.outputFile );
         }
@@ -171,11 +170,11 @@ public class ShowDeploymentArtifacts
     }
 
     /**
-     * Vuelva información de un artefacto en STDOUT.
+     * Adds an artifact to the upload list
      */
     private void addUploadedArtifact( MavenProject project, Artifact artifact )
     {
-        // Si hay información de la distribución, buscamos los artefactos añadidos
+        // Without distribution management, we cannot add the artifact
         if ( this.artifact.getDistributionManagementArtifactRepository() == null )
         {
             return;
@@ -183,8 +182,8 @@ public class ShowDeploymentArtifacts
 
         String artifactUrl =
             this.artifact.getDistributionManagementArtifactRepository().getUrl() + getLocation( artifact, true );
+        artifactUrl = artifactUrl.replaceAll("(?<=[^:\\s])(\\/+\\/)", "/");
 
-        // Añadimos el artefacto a la lista
         MavenUploadedArtifact uploadedArtifact =
             new MavenUploadedArtifact( artifact.getGroupId(), artifact.getArtifactId(), project.getVersion(),
                                        artifact.getClassifier(), artifact.getType(), artifactUrl );
@@ -198,16 +197,17 @@ public class ShowDeploymentArtifacts
     {
         ArrayList<String> output = new ArrayList<String>();
 
-        output.add( "declare -a artifacts=(" );
+        int idx = 0;
         for ( MavenUploadedArtifact artifact : this.artifacts )
         {
-            output.add( "'" + artifact.getArtifactId() + "'" );
-            output.add( "    <version>" + artifact.getVersion() + "'" );
-            output.add( "    <classifier>" + artifact.getClassifier() + "'" );
-            output.add( "    <type>" + artifact.getType() + "'" );
-            output.add( "    <url>" + artifact.getUrl() + "'" );
+            idx++;
+            output.add( "ARTIFACT_" + idx + "_ID='" + artifact.getArtifactId() + "'" );
+            output.add( "ARTIFACT_" + idx + "_VERSION='"+ artifact.getVersion() + "'" );
+            output.add( "ARTIFACT_" + idx + "_CLASSIFIER='" + artifact.getClassifier() + "'" );
+            output.add( "ARTIFACT_" + idx + "_TYPE='" + artifact.getType() + "'" );
+            output.add( "ARTIFACT_" + idx + "_URL='" + artifact.getUrl() + "'" );
         }
-        output.add( ")" );
+        output.add( "ARTIFACT_COUNT=" + idx );
 
         return output;
     }
@@ -219,6 +219,7 @@ public class ShowDeploymentArtifacts
     {
         ArrayList<String> output = new ArrayList<String>();
 
+        output.add( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
         output.add( "<artifacts>" );
 
         for ( MavenUploadedArtifact artifact : this.artifacts )
@@ -230,7 +231,7 @@ public class ShowDeploymentArtifacts
             output.add( "    <classifier>" + artifact.getClassifier() + "</classifier>" );
             output.add( "    <type>" + artifact.getType() + "</type>" );
             output.add( "    <url>" + artifact.getUrl() + "</url>" );
-            output.add( "  <artifact>" );
+            output.add( "  </artifact>" );
 
         }
         output.add( "</artifacts>" );
@@ -250,6 +251,29 @@ public class ShowDeploymentArtifacts
 
         ObjectMapper jsonMapper = new ObjectMapper();
         output.add( jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString( artifacts ) );
+
+        return output;
+    }
+
+    /**
+     * YAML output.
+     */
+    private ArrayList<String> toYAML()
+    {
+        ArrayList<String> output = new ArrayList<String>();
+
+        output.add( "artifacts:" );
+
+        for ( MavenUploadedArtifact artifact : this.artifacts )
+        {
+            output.add( " - artifactId: '" + artifact.getArtifactId() + "'" );
+            output.add( "   groupId: '" + artifact.getGroupId() + "'" );
+            output.add( "   version: '" + artifact.getVersion() + "'" );
+            output.add( "   classifier: '" + artifact.getClassifier() + "'" );
+            output.add( "   type: '" + artifact.getType() + "'" );
+            output.add( "   url: '" + artifact.getUrl() + "'" );
+
+        }
 
         return output;
     }
@@ -320,7 +344,7 @@ public class ShowDeploymentArtifacts
 
         // 'artifact.getBaseVersion()' - returns '0.1.2-SNAPSHOT'
         // 'artifact.getVersion()' - replaces the 'SNAPSHOT' for a timestamp
-        path.append( artifact.getArtifactId() ).append( '-' ).append( artifact.getVersion() );
+        path.append( artifact.getArtifactId() ).append( '-' ).append( artifact.getBaseVersion() );
 
         if ( ( artifact.getClassifier() != null ) && ( artifact.getClassifier().length() > 0 ) )
         {

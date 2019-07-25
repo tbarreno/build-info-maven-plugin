@@ -31,6 +31,11 @@ public class Common
     public static String OUTPUT_CSV = "csv";
 
     /**
+     * Output format: YAML
+     */
+    public static String OUTPUT_YAML = "yml";
+
+    /**
      * Output format: XML
      */
     public static String OUTPUT_XML = "xml";
@@ -54,9 +59,13 @@ public class Common
         {
             format = "xml";
         }
+        else if ( outputFile.endsWith( ".yml" ) || outputFile.endsWith( ".yaml" ))
+        {
+            format = "yml";
+        }
         else if ( outputFile.endsWith( ".sh" ) )
         {
-            format = "sh-export";
+            format = "sh";
         }
         return ( format );
     }

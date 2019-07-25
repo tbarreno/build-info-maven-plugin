@@ -18,7 +18,7 @@ import org.apache.maven.project.MavenProject;
  * Save the 'distributionManagement' (snapshots and releases repositories) of the current project in a
  * CSV/JSON/XML/Shell file.
  */
-@Mojo( name = "distribution-management", requiresProject = true, threadSafe = true, inheritByDefault = false )
+@Mojo( name = "distribution", requiresProject = true, threadSafe = true, inheritByDefault = false )
 public class GetDistributionManagement
     extends AbstractMojo
 {
@@ -75,6 +75,10 @@ public class GetDistributionManagement
             else if ( Common.OUTPUT_JSON.equalsIgnoreCase( format ) )
             {
                 output = toJSON( dm );
+            }
+            else if ( Common.OUTPUT_YAML.equalsIgnoreCase( format ) )
+            {
+                output = toYAML( dm );
             }
             else if ( Common.OUTPUT_CSV.equalsIgnoreCase( format ) )
             {
@@ -134,6 +138,28 @@ public class GetDistributionManagement
         output.add( "\"snapshot_url\":\"" + dm.getSnapshotRepository().getUrl() + "\"," );
         output.add( "\"snapshot_layout\":\"" + dm.getSnapshotRepository().getLayout() + "\"" );
         output.add( "}" );
+
+        return output;
+    }
+
+    /**
+     * YAML output.
+     */
+    private ArrayList<String> toYAML( DistributionManagement dm )
+    {
+        ArrayList<String> output = new ArrayList<String>();
+
+        output.add( "releases:" );
+        output.add( "  id: '" + dm.getRepository().getId() + "'" );
+        output.add( "  name: '" + dm.getRepository().getName() + "'" );
+        output.add( "  url: '" + dm.getRepository().getUrl() + "'" );
+        output.add( "  layout: '" + dm.getRepository().getLayout() + "'" );
+
+        output.add( "snapshots:" );
+        output.add( "  id: '" + dm.getSnapshotRepository().getId() + "'" );
+        output.add( "  name: '" + dm.getSnapshotRepository().getName() + "'" );
+        output.add( "  url: '" + dm.getSnapshotRepository().getUrl() + "'" );
+        output.add( "  layout: '" + dm.getSnapshotRepository().getLayout() + "'" );
 
         return output;
     }
